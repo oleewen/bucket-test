@@ -29,8 +29,10 @@ public class BucketTestHelper implements Serializable {
     private String bucketConfig;
 
     public static BucketTestHelper instance(String bucketConfig) {
+        /** 如果有设定缓存，则优先用缓存 */
         if (cacheClient != null) {
 
+            // 实例化BucketTestHelper
             Serializable key = cacheClient.key("BucketTest:Helper:", md5Hex(bucketConfig));
 
             BucketTestHelper instance = cacheClient.get(key);
@@ -43,7 +45,7 @@ public class BucketTestHelper implements Serializable {
             }
             return instance;
         }
-        // 兼容无缓存
+        /** 无缓存，直接实例化 */
         else {
             return getInstance(bucketConfig);
         }
@@ -93,6 +95,7 @@ public class BucketTestHelper implements Serializable {
     public int bucket(final String name, final long index) {
         if (cacheClient != null) {
 
+            // 优先使用缓存中的计算结果
             Serializable key = cacheClient.key("BucketTest:Bucket:", name, index);
 
             Integer value = cacheClient.get(key);
