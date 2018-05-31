@@ -28,7 +28,7 @@ public class BucketTestHelperTest {
 
     @After
     public void tearDown() throws Exception {
-
+        BucketTestHelper.setCacheClient(null);
     }
 
     @Test
@@ -78,16 +78,9 @@ public class BucketTestHelperTest {
     }
 
     @Test
-    public void bucket_OptionalIsAbsent() throws Exception {
+    public void bucket_nocache_miss() throws Exception {
         String name = "bucket_test";
         long index = 123456789L;
-
-        CacheClient cacheClient = Mockito.mock(CacheClient.class);
-        BucketTestHelper.setCacheClient(cacheClient);
-
-        String key = "BucketTest:Bucket:" + name + ":" + index;
-        Mockito.when(cacheClient.key("BucketTest", "Bucket", name, index)).thenReturn(key);
-        Mockito.when(cacheClient.get(Mockito.anyString(), Mockito.any(Callable.class), Mockito.anyInt())).thenReturn(Optional.absent());
 
         String bucketConfig = "[{\"name\":\"bucket_test\",\"basic\":100,\"percent\":1,\"status\":1,\"hits\":[\"hislist\"],\"extra\":\"{\\\"current\\\":1\"}]";
 
@@ -97,16 +90,9 @@ public class BucketTestHelperTest {
     }
 
     @Test
-    public void bucket_OptionalIsPresent() throws Exception {
+    public void bucket_nocache_hit() throws Exception {
         String name = "bucket_test";
         long index = 12345678900L;
-
-        CacheClient cacheClient = Mockito.mock(CacheClient.class);
-        BucketTestHelper.setCacheClient(cacheClient);
-
-        String key = "BucketTest:Bucket:" + name + ":" + index;
-        Mockito.when(cacheClient.key("BucketTest", "Bucket", name, index)).thenReturn(key);
-        Mockito.when(cacheClient.get(Mockito.anyString(), Mockito.any(Callable.class), Mockito.anyInt())).thenReturn(Optional.fromNullable(1));
 
         String bucketConfig = "[{\"name\":\"bucket_test\",\"basic\":100,\"percent\":1,\"status\":1,\"hits\":[\"hislist\"],\"extra\":\"{\\\"current\\\":1\"}]";
 
@@ -117,6 +103,21 @@ public class BucketTestHelperTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void calculate_ConfigIsNull() {
+        String name = "bucket_test";
+        long index = 123456789L;
+
+        CacheClient cacheClient = Mockito.mock(CacheClient.class);
+        BucketTestHelper.setCacheClient(cacheClient);
+
+        String bucketConfig = null;
+
+        int bucket = BucketTestHelper.instance(bucketConfig).calculate(name, index);
+
+        assertThat(bucket, CoreMatchers.is(-1));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void calculate_ConfigIsEmpty() {
         String name = "bucket_test";
         long index = 123456789L;
 
@@ -175,6 +176,24 @@ public class BucketTestHelperTest {
     }
 
     @Test
+    public void testInstance_nocache_notFound() {
+        String bucketConfig = "[{\"name\":\"bucket_test\",\"basic\":100,\"percent\":1,\"status\":1,\"hits\":[\"hislist\"],\"extra\":\"{\\\"current\\\":1\"}]";
+        BucketTest instance = BucketTestHelper.instance(bucketConfig).findBucketTest("test");
+
+        assertThat(instance, CoreMatchers.nullValue());
+    }
+
+    @Test
+    public void testInstance_nocache_found() {
+        String bucketConfig = "[{\"name\":\"bucket_test\",\"basic\":100,\"percent\":1,\"status\":1,\"hits\":[\"hislist\"],\"extra\":\"{\\\"current\\\":1\"}]";
+        BucketTest instance = BucketTestHelper.instance(bucketConfig).findBucketTest("bucket_test");
+
+        assertThat(instance, CoreMatchers.notNullValue());
+        assertThat(instance.getExtra(), CoreMatchers.notNullValue());
+        assertThat(instance.getExtra().contains("current"), CoreMatchers.is(true));
+    }
+
+    @Test
     public void testInstance_BucketConfigEmpty() {
         String bucketConfig = "[{\"name\":\"bucket_test\",\"basic\":100,\"percent\":1,\"status\":1,\"hits\":[\"hislist\"],\"extra\":\"{\\\"current\\\":1\"}]";
         BucketTest instance = BucketTestHelper.instance(bucketConfig).findBucketTest("test");
@@ -185,7 +204,6 @@ public class BucketTestHelperTest {
     @Test
     public void testInstance_BucketConfigFormatException() {
         String bucketConfig = "[{\"name\":\"bucket_test\",\"basic\":100,\"percent\":1,\"status\":1,\"hits\":[\"hislist\"],\"extra\":\"{\\\"current\\\":1\"}]";
-
 
         BucketTest instance = BucketTestHelper.instance(bucketConfig).findBucketTest("test");
 

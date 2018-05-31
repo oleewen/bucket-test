@@ -8,6 +8,7 @@ import org.springframework.ext.common.cache.CacheClient;
 import org.springframework.ext.common.helper.JsonHelper;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
@@ -150,27 +151,21 @@ public class BucketTestHelper implements Serializable {
     }
 
     private BucketTest valueOf(final String name) {
-        if (bucketConfig != null) {
-            List<BucketTest> result = null;
+        List<BucketTest> result = null;
 
-            try {
-                // 加载所有bucket配置
-                result = JsonHelper.fromJson(bucketConfig, result.getClass());
-            } catch (Exception e) {
-                logger.error(String.format("valueOf@name%s,bucketConfig:%s", name, bucketConfig), e);
-            }
+        try {
+            // 加载所有bucket配置
+            result = JsonHelper.fromJsonList(bucketConfig, BucketTest.class);
+        } catch (Exception e) {
+            logger.error(String.format("valueOf@name%s,bucketConfig:%s", name, bucketConfig), e);
+        }
 
-            if (result != null && !result.isEmpty()) {
-                for (BucketTest each : result) {
-                    if (each.getName().equals(name)) {
-                        return each;
-                    }
+        if (result != null && !result.isEmpty()) {
+            for (BucketTest each : result) {
+                if (each.getName().equals(name)) {
+                    return each;
                 }
             }
-        }
-        //
-        else {
-            logger.warn(String.format("valueOf@name:%s,bucketConfig:null", name));
         }
 
         return null;
