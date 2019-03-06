@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * 分桶测试辅助类
  *
- * @author: leiteng
+ * @author: oleone
  * @since: 2016-07-13.
  */
 public class BucketTestHelper implements Serializable {

@@ -50,19 +50,17 @@ graph TB
 ```
 
 ### 3. 分桶配置
-- 在diamond上申请一个配置
-    - group=${appname}
-    - dataId=bucketConfig
+- 在配置中心上申请一个配置，例如
 
 ```json
-[{"name":"smartDesign", "percent":1, "basic":100, "status":1, "hits":["3665061551","3700502224","3665051611"]}]
+[{"name":"smartDesign", "percent":1, "basic":100, "status":1, "hits":["3665061551","3700502224","3665051611"], "excludes":["3665061555","3700502223","3665051688"]}]
 ```
 
 ### 4. 使用示例
 
 ```java
 // 计算是否在分桶中
-boolean isBucket = BucketTestHelper.instance("[{\"name\":\"smartDedign\", \"percent\":1, \"basic\":100, \"status\":1, \"hits\":[\"3665061551\",\"3700502224\",\"3665051611\"]}]").isBucket("smartDesign", userId);
+boolean isBucket = BucketTestHelper.instance("[{\"name\":\"smartDedign\", \"percent\":1, \"basic\":100, \"status\":1, \"hits\":[\"3665061551\",\"3700502224\",\"3665051611\"], \"excludes\":[\"3665061555\",\"3700502223\",\"3665051688\"]}]").isBucket("smartDesign", userId);
 // 设置标志位到context
 context.put("showSmartDesign", isBucket);
 ```
@@ -73,7 +71,8 @@ context.put("showSmartDesign", isBucket);
 - 分流测试：将流量总值视为100%，切入一定比例流量到需要测试的功能，称之为分流测试
 - 分流比例：需要测试的流量比例
 - 分桶：可以将流量均分为N部分，每一部分为一个分桶；分桶从0号桶开始，直至（N-1）号桶
-- 白名单：维度（用户id、浏览器uuid等）白名单
+- 白名单：维度（用户id、浏览器uuid等）白名单，白名单中的流量，判断结果一直为isBucket=true
+- 黑名单：维度（用户id、浏览器uuid等）黑名单，黑名单中的流量，判断结果一直为isBucket=false
 
 ### 2. 分桶配置
 - name:分桶测试标识，唯一索引
@@ -81,3 +80,4 @@ context.put("showSmartDesign", isBucket);
 - basic:分流比例分母，默认100，分流比例为percent/basic
 - status:是否有效状态，0 未启用; 1 启用中; 2 已废弃 
 - hits:白名单，命中则直接返回0号分桶；白名单优先匹配
+- excludes:黑名单，永远不命中

@@ -5,7 +5,7 @@ import java.util.Set;
 /**
  * 分桶测试实例
  *
- * @author: leiteng
+ * @author: oleone
  * @since: 2016-07-13.
  */
 public class BucketTest {
