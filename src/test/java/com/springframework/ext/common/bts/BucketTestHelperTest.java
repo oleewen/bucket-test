@@ -102,7 +102,7 @@ public class BucketTestHelperTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void calculate_ConfigIsNull() {
+    public void bucket_ConfigIsNull() {
         String name = "bucket_test";
         long index = 123456789L;
 
@@ -111,13 +111,13 @@ public class BucketTestHelperTest {
 
         String bucketConfig = null;
 
-        int bucket = BucketTestHelper.instance(bucketConfig).calculate(name, index);
+        int bucket = BucketTestHelper.instance(bucketConfig).bucket(name, index);
 
         assertThat(bucket, CoreMatchers.is(-1));
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void calculate_ConfigIsEmpty() {
+    public void bucket_ConfigIsEmpty() {
         String name = "bucket_test";
         long index = 123456789L;
 
@@ -126,13 +126,13 @@ public class BucketTestHelperTest {
 
         String bucketConfig = "";
 
-        int bucket = BucketTestHelper.instance(bucketConfig).calculate(name, index);
+        int bucket = BucketTestHelper.instance(bucketConfig).bucket(name, index);
 
         assertThat(bucket, CoreMatchers.is(-1));
     }
 
     @Test
-    public void calculate_NotInBucket() {
+    public void bucket_NotInBucket() {
         String name = "bucket_test";
         long index = 123456789L;
 
@@ -141,7 +141,7 @@ public class BucketTestHelperTest {
 
         String bucketConfig = "[{\"name\":\"bucket_test\",\"basic\":100,\"percent\":1,\"status\":1,\"hits\":[\"hislist\"],\"extra\":\"{\\\"current\\\":1\"}]";
 
-        int bucket = BucketTestHelper.instance(bucketConfig).calculate(name, index);
+        int bucket = BucketTestHelper.instance(bucketConfig).bucket(name, index);
 
         assertThat(bucket, CoreMatchers.is(-1));
     }
@@ -162,7 +162,7 @@ public class BucketTestHelperTest {
     }
 
     @Test
-    public void calculate_InBucket() {
+    public void bucket_InBucket() {
         String name = "bucket_test";
         long index = 12345678900L;
 
@@ -170,7 +170,7 @@ public class BucketTestHelperTest {
         BucketTestHelper.setCacheClient(cacheClient);
         String bucketConfig = "[{\"name\":\"bucket_test\",\"basic\":100,\"percent\":1,\"status\":1,\"hits\":[\"hislist\"],\"extra\":\"{\\\"current\\\":1\"}]";
 
-        int bucket = BucketTestHelper.instance(bucketConfig).calculate(name, index);
+        int bucket = BucketTestHelper.instance(bucketConfig).bucket(name, index);
 
         assertThat(bucket, CoreMatchers.is(0));
     }
