@@ -1,7 +1,6 @@
 package com.springframework.ext.common.bts;
 
 import com.google.common.collect.Maps;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,7 +10,6 @@ import org.springframework.ext.common.helper.JsonHelper;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -21,8 +19,6 @@ import java.util.concurrent.TimeUnit;
  * @since: 2016-07-13.
  */
 public class BucketTestHelper implements Serializable {
-    /** 默认桶号:不命中 */
-    private static final int BUCKET_DEFAULT = -1;
     /** 日志对象 */
     private static Logger logger = LoggerFactory.getLogger(BucketTestHelper.class);
     /** 本地缓存 */
@@ -33,11 +29,15 @@ public class BucketTestHelper implements Serializable {
     private Map<String, BucketTest> bucketTestMap;
 
     public static BucketTestHelper instance(String bucketConfig) {
+        if (StringUtils.isBlank(bucketConfig)) {
+            throw new IllegalArgumentException("bucketConfig is empty");
+        }
+
         /** 如果有设定缓存，则优先用缓存 */
         if (cacheClient != null) {
 
             // 实例化BucketTestHelper
-            Serializable key = cacheClient.key("BucketTest:Helper:", md5Hex(bucketConfig));
+            Serializable key = cacheClient.key("BucketTest:Helper:", bucketConfig.hashCode());
 
             BucketTestHelper instance = cacheClient.get(key);
 
@@ -56,10 +56,6 @@ public class BucketTestHelper implements Serializable {
     }
 
     private static BucketTestHelper getInstance(String bucketConfig) {
-        if (StringUtils.isBlank(bucketConfig)) {
-            throw new IllegalArgumentException("bucketConfig is empty");
-        }
-
         BucketTestHelper helper = new BucketTestHelper();
         helper.setBucketConfig(bucketConfig);
         return helper;
@@ -67,14 +63,6 @@ public class BucketTestHelper implements Serializable {
 
     public static void setCacheClient(CacheClient cacheClient) {
         BucketTestHelper.cacheClient = cacheClient;
-    }
-
-    private static String md5Hex(String str) {
-        if (StringUtils.isBlank(str)) {
-            return "";
-        }
-        // 直接是apache的库
-        return DigestUtils.md5Hex(str);
     }
 
     /**
@@ -100,32 +88,21 @@ public class BucketTestHelper implements Serializable {
         // 实例化分桶测试
         BucketTest bucketTest = valueOf(name);
 
-        int bucket = BUCKET_DEFAULT;
+        int bucket = BucketTest.BUCKET_DEFAULT;
         // 分桶测试实例存在
         if (bucketTest != null) {
             // 根据索引计算分桶
             bucket = bucketTest.bucket(index);
         }
 
-        // 不在分桶中, 也缓存; 如果不需要缓存, 返回null
         return bucket;
     }
 
     public BucketTest findBucketTest(final String name) {
         if (cacheClient != null) {
-
             Serializable key = cacheClient.key("BucketTest:Instance:", name);
 
-            BucketTest instance = cacheClient.get(key, new Callable<BucketTest>() {
-                @Override
-                public BucketTest call() throws Exception {
-                    BucketTest instance = valueOf(name);
-
-                    return instance;
-                }
-            }, (int) TimeUnit.MINUTES.toSeconds(5));
-
-            return instance;
+            return cacheClient.get(key, () -> valueOf(name), (int) TimeUnit.MINUTES.toSeconds(5));
         }
         return valueOf(name);
     }
@@ -145,13 +122,11 @@ public class BucketTestHelper implements Serializable {
             }
 
             if (result != null && !result.isEmpty()) {
-                Map<String, BucketTest> bucketTestMap = Maps.newHashMap();
+                this.bucketTestMap = Maps.newHashMap();
 
                 for (BucketTest each : result) {
-                    bucketTestMap.put(each.getName(),each);
+                    this.bucketTestMap.put(each.getName(), each);
                 }
-
-                this.bucketTestMap = bucketTestMap;
             }
         }
 
@@ -159,7 +134,6 @@ public class BucketTestHelper implements Serializable {
             // 查找name匹配的BucketTest
             return this.bucketTestMap.get(name);
         }
-
         return null;
     }
 }

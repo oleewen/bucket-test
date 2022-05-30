@@ -9,6 +9,8 @@ import java.util.Set;
  * @since: 2016-07-13.
  */
 public class BucketTest {
+    /** 默认桶号:不命中 */
+    public static final int BUCKET_DEFAULT = -1;
     /** 分桶标识 */
     private String name;
     /** 分流比例 */
@@ -50,7 +52,7 @@ public class BucketTest {
     public int bucket(long index) {
         /** 分桶不可用状态 */
         if (!isEnable()) {
-            return -1;
+            return BUCKET_DEFAULT;
         }
 
         /** 黑名单验证 */
@@ -58,7 +60,7 @@ public class BucketTest {
         if (excludes != null && !excludes.isEmpty()) {
             // 命中黑名单
             if (excludes.contains(String.valueOf(index))) {
-                return -1;
+                return BUCKET_DEFAULT;
             }
         }
 
@@ -75,7 +77,7 @@ public class BucketTest {
         /** 分流比例小于0, 全部流量不走bts */
         int percent = getPercent();
         if (percent <= 0) {
-            return -1;
+            return BUCKET_DEFAULT;
         }
 
         // 兼容basic不大于0的情况
@@ -97,7 +99,7 @@ public class BucketTest {
         }
 
         // 未命中分桶
-        return -1;
+        return BUCKET_DEFAULT;
     }
 
     public boolean isEnable() {
