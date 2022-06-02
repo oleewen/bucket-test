@@ -28,7 +28,7 @@ public class BucketTestTest {
     public void isBucket_Yes() throws Exception {
         instance = JsonHelper.fromJson("{\"name\":\"bucket_test\", \"percent\":1, \"basic\":\"100\", \"status\":\"1\", \"hits\":[]}", BucketTest.class);
 
-        boolean success = instance.isBucket(12345678900L);
+        boolean success = instance.isBucket(12345678861L);
         assertThat(success, CoreMatchers.is(true));
     }
 
@@ -36,7 +36,7 @@ public class BucketTestTest {
     public void isBucket_Not() throws Exception {
         instance = JsonHelper.fromJson("{\"name\":\"bucket_test\", \"percent\":1, \"status\":\"2\"}", BucketTest.class);
 
-        boolean success = instance.isBucket(0L);
+        boolean success = instance.isBucket(12345678860L);
         assertThat(success, CoreMatchers.is(false));
     }
 
@@ -84,7 +84,7 @@ public class BucketTestTest {
     public void bucket_BucketIsZero() throws Exception {
         instance = JsonHelper.fromJson("{\"name\":\"bucket_test\", \"percent\":1, \"basic\":\"100\", \"status\":\"1\", \"hits\":[]}", BucketTest.class);
 
-        int bucket = instance.bucket(12345678900L);
+        int bucket = instance.bucket(12345678861L);
         assertThat(bucket, CoreMatchers.is(0));
     }
 

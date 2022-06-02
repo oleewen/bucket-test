@@ -9,8 +9,8 @@ import java.util.Set;
  * @since: 2016-07-13.
  */
 public class BucketTest {
-    /** 默认桶号:不命中 */
-    public static final int BUCKET_DEFAULT = -1;
+    /** 空测试 */
+    private static final BucketTest EMPTY = new BucketTest();
     /** 分桶标识 */
     private String name;
     /** 分流比例 */
@@ -25,6 +25,10 @@ public class BucketTest {
     private Set<String> excludes;
     /** 扩展配置 */
     private String extra;
+
+    public static BucketTest empty() {
+        return EMPTY;
+    }
 
     /**
      * 判断当前索引值是否在分桶测试中
@@ -52,46 +56,34 @@ public class BucketTest {
     public int bucket(long index) {
         /** 分桶不可用状态 */
         if (!isEnable()) {
-            return BUCKET_DEFAULT;
+            return -1;
         }
 
         /** 黑名单验证 */
-        Set<String> excludes = getExcludes();
-        if (excludes != null && !excludes.isEmpty()) {
-            // 命中黑名单
-            if (excludes.contains(String.valueOf(index))) {
-                return BUCKET_DEFAULT;
-            }
+        if(existInSet(index, getExcludes())){
+            // 命中黑名单，范围-1，未命中桶
+            return -1;
         }
 
         /** 白名单验证 */
-        Set<String> hits = getHits();
-        if (hits != null && !hits.isEmpty()) {
-            // 命中白名单
-            if (hits.contains(String.valueOf(index))) {
-                // 返回0号桶
-                return 0;
-            }
+        if (existInSet(index, getHits())) {
+            // 命中白名单，返回0号桶
+            return 0;
         }
 
-        /** 分流比例小于0, 全部流量不走bts */
+        /** 分流比例小于0, 不走bts */
         int percent = getPercent();
         if (percent <= 0) {
-            return BUCKET_DEFAULT;
+            return -1;
         }
 
         // 兼容basic不大于0的情况
         int total = getBasic();
-        if (total <= 0) {
-            total = 100;
-        }
+        // 分层正交实验
+        index = overlap(index);
 
         /** 计算hash桶 */
         long bucket = index % total;
-
-        if (bucket < 0) {
-            bucket = Math.abs(bucket);
-        }
 
         // 命中bts分桶
         if (bucket < percent) {
@@ -99,7 +91,22 @@ public class BucketTest {
         }
 
         // 未命中分桶
-        return BUCKET_DEFAULT;
+        return -1;
+    }
+
+    private long overlap(long index) {
+        // 用实验名的hash值作为index的一部分，简单实现分层正交实验
+        int hash = Math.abs(name.hashCode());
+        index += hash;
+        // 绝对值转换，确保相加溢出后，还能返回正数
+        return Math.abs(index);
+    }
+
+    private boolean existInSet(long index, Set<String> set) {
+        if (set != null && !set.isEmpty()) {
+            return set.contains(String.valueOf(index));
+        }
+        return false;
     }
 
     public boolean isEnable() {
@@ -123,6 +130,9 @@ public class BucketTest {
     }
 
     public int getBasic() {
+        if (basic <= 0) {
+            basic = 100;
+        }
         return basic;
     }
 
