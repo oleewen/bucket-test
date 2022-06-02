@@ -1,5 +1,7 @@
 package com.springframework.ext.common.bts;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.util.Set;
 
 /**
@@ -107,6 +109,10 @@ public class BucketTest {
             return set.contains(String.valueOf(index));
         }
         return false;
+    }
+
+    public boolean isEmpty(){
+        return StringUtils.isEmpty(getName());
     }
 
     public boolean isEnable() {

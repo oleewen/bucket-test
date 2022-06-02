@@ -88,12 +88,16 @@ public class BucketTestHelper implements Serializable {
     }
 
     public BucketTest findBucketTest(final String name) {
+        BucketTest bucketTest;
         if (cacheClient != null) {
             Serializable key = cacheClient.key("BucketTest:Instance:", name);
             // return if cached, otherwise create, cache and return
-            return cacheClient.get(key, () -> valueOf(name), (int) TimeUnit.MINUTES.toSeconds(5));
+            bucketTest = cacheClient.get(key, () -> valueOf(name), (int) TimeUnit.MINUTES.toSeconds(5));
+        } else {
+            bucketTest = valueOf(name);
         }
-        return valueOf(name);
+
+        return bucketTest.isEmpty() ? null : bucketTest;
     }
 
     private BucketTest valueOf(final String name) {
